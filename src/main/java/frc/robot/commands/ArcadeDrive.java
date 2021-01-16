@@ -12,6 +12,8 @@ public class ArcadeDrive extends CommandBase {
   private final Drivetrain m_drivetrain;
   private final Supplier<Double> m_xaxisSpeedSupplier;
   private final Supplier<Double> m_zaxisRotateSupplier;
+  private final Supplier<Double> leftBumperSupplier;
+  private final Supplier<Double> rightBumperSupplier;
 
   /**
    * Creates a new ArcadeDrive. This command will drive your robot according to the speed supplier
@@ -24,10 +26,14 @@ public class ArcadeDrive extends CommandBase {
   public ArcadeDrive(
       Drivetrain drivetrain,
       Supplier<Double> xaxisSpeedSupplier,
-      Supplier<Double> zaxisRotateSuppplier) {
+      Supplier<Double> zaxisRotateSuppplier,
+      Supplier<Double> leftBumperSupplier,
+      Supplier<Double> rightBumperSupplier) {
     m_drivetrain = drivetrain;
     m_xaxisSpeedSupplier = xaxisSpeedSupplier;
     m_zaxisRotateSupplier = zaxisRotateSuppplier;
+    this.leftBumperSupplier = leftBumperSupplier;
+    this.rightBumperSupplier = rightBumperSupplier;
     addRequirements(drivetrain);
   }
 
@@ -38,7 +44,11 @@ public class ArcadeDrive extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_drivetrain.arcadeDrive(m_xaxisSpeedSupplier.get(), m_zaxisRotateSupplier.get());
+    if(leftBumperSupplier.get() > 0.0 || rightBumperSupplier.get() > 0.0) {
+      m_drivetrain.tankDrive(leftBumperSupplier.get(), rightBumperSupplier.get());
+    } else {
+      m_drivetrain.arcadeDrive(m_xaxisSpeedSupplier.get(), m_zaxisRotateSupplier.get());
+    }
   }
 
   // Called once the command ends or is interrupted.
