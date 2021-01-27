@@ -155,6 +155,13 @@ public class Drivetrain extends SubsystemBase {
     m_gyro.reset();
   }
 
+  public void updateDashboard() {
+    SmartDashboard.putNumber("Right Encoder", getRightEncoderCount());
+    SmartDashboard.putNumber("Left Encoder", getLeftEncoderCount());
+    SmartDashboard.putNumber("Right Distance", getRightDistanceMeter());
+    SmartDashboard.putNumber("Left Distance", getLeftDistanceMeter());
+  }
+
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
