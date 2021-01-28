@@ -112,21 +112,22 @@ public class RobotContainer {
         // Start at the origin facing the +X direction
         new Pose2d(0, 0, new Rotation2d(0)),
         List.of(
-          new Translation2d(0.5, 0.5),
-          new Translation2d(1, -0.5)
+          new Translation2d(0.5, -0.5),
+          new Translation2d(0.75, 0.5),
+          new Translation2d(1, 0)
         ),
         new Pose2d(0, 0, new Rotation2d(0)),
         config);
-        /*String trajectoryJSON = "paths/Test.wpilib.json";
-        Trajectory tempTrajectory = new Trajectory();
-        Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
-        try {
-          tempTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-        } catch (IOException ex) {
-          DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
-        }
-        //Transform2d transform = m_drivetrain.getPose().minus(tempTrajectory.getInitialPose());
-        Trajectory exampleTrajectory = tempTrajectory;*/
+      /*String trajectoryJSON = "paths/small.wpilib.json";
+      Trajectory tempTrajectory = new Trajectory();
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      try {
+        tempTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+      } catch (IOException ex) {
+        DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
+      }
+      Transform2d transform = m_drivetrain.getPose().minus(tempTrajectory.getInitialPose());
+      Trajectory exampleTrajectory = tempTrajectory.transformBy(transform);*/
 
     RamseteCommand ramseteCommand = new RamseteCommand(
         exampleTrajectory,
