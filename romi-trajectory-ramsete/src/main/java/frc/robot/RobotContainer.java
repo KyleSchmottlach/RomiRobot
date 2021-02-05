@@ -114,11 +114,9 @@ public class RobotContainer {
         List.of(
           new Translation2d(0.5, 0.25),
           new Translation2d(1.0, -0.25),
-          new Translation2d(1.5, 0),
-          new Translation2d(1.0, 0.25),
-          new Translation2d(0.5, -0.25)
+          new Translation2d(1.5, 0)
         ),
-        new Pose2d(0, 0, new Rotation2d(0)),
+        new Pose2d(0, 0, new Rotation2d(Math.PI)),
         config);
       /*String trajectoryJSON = "paths/small.wpilib.json";
       Trajectory tempTrajectory = new Trajectory();
