@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Spark;
@@ -44,6 +46,9 @@ public class Drivetrain extends SubsystemBase {
 
   // Also show a field diagram
   private final Field2d m_field2d = new Field2d();
+
+  private NetworkTableEntry m_xEntry = NetworkTableInstance.getDefault().getTable("troubleshooting").getEntry("X");
+  private NetworkTableEntry m_yEntry = NetworkTableInstance.getDefault().getTable("troubleshooting").getEntry("Y");
 
   /** Creates a new Drivetrain. */
   public Drivetrain() {
@@ -165,7 +170,11 @@ public class Drivetrain extends SubsystemBase {
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
-    m_odometry.update(m_gyro.getRotation2d(), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    m_odometry.update(m_gyro.getRotation2d().fromDegrees(getHeading()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+
+    var translation = m_odometry.getPoseMeters().getTranslation();
+    m_xEntry.setNumber(translation.getX());
+    m_yEntry.setNumber(translation.getY());
     
     // Also update the Field2D object (so that we can visualize this in sim)
     m_field2d.setRobotPose(getPose());
