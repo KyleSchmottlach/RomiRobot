@@ -112,13 +112,10 @@ public class RobotContainer {
         // Start at the origin facing the +X direction
         new Pose2d(0, 0, new Rotation2d(0)),
         List.of(
-          new Translation2d(0.5, 0.5),
-          new Translation2d(1.0, 0.5),
-          new Translation2d(1.5, 0),
-          new Translation2d(1.0, -0.5),
-          new Translation2d(0.5, -0.5)
+          new Translation2d(1, 0),
+          new Translation2d(0, 1)
         ),
-        new Pose2d(0, 0, new Rotation2d(Math.PI)),
+        new Pose2d(0, 0, new Rotation2d(0)),
         config);
       /*String trajectoryJSON = "paths/small.wpilib.json";
       Trajectory tempTrajectory = new Trajectory();
