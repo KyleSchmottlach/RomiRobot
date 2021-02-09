@@ -165,6 +165,8 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("Left Encoder", getLeftEncoderCount());
     SmartDashboard.putNumber("Right Distance", getRightDistanceMeter());
     SmartDashboard.putNumber("Left Distance", getLeftDistanceMeter());
+    SmartDashboard.putNumber("Odometry X", m_xEntry.getDouble(0));
+    SmartDashboard.putNumber("Odometry Y", m_yEntry.getDouble(0));
   }
 
   @Override
