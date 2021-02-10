@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
+import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
@@ -102,18 +103,19 @@ public class RobotContainer {
             .setKinematics(DriveConstants.kDriveKinematics)
             .addConstraint(autoVoltageConstraint);
 
+    final double dxy = 0.25;
+
     // This trajectory can be modified to suit your purposes
     // Note that all coordinates are in meters, and follow NWU conventions.
     // If you would like to specify coordinates in inches (which might be easier
     // to deal with for the Romi), you can use the Units.inchesToMeters() method
     Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
         // Start at the origin facing the +X direction
-        new Pose2d(0, 0, new Rotation2d(0)),
         List.of(
-          new Translation2d(1, 0),
-          new Translation2d(0, 1)
+          new Pose2d(0, 0, new Rotation2d(0)),
+          new Pose2d(Units.inchesToMeters(15), Units.inchesToMeters(15), new Rotation2d(Math.PI / 2)),
+          new Pose2d(Units.inchesToMeters(-8.5), Units.inchesToMeters(8.5), new Rotation2d(-Math.PI / 2))
         ),
-        new Pose2d(0, 0, new Rotation2d(0)),
         config);
       /*String trajectoryJSON = "paths/small.wpilib.json";
       Trajectory tempTrajectory = new Trajectory();
