@@ -103,7 +103,7 @@ public class RobotContainer {
             .setKinematics(DriveConstants.kDriveKinematics)
             .addConstraint(autoVoltageConstraint);
 
-    final double dxy = 0.25;
+    final double dxy = Units.inchesToMeters(8.0);
 
     // This trajectory can be modified to suit your purposes
     // Note that all coordinates are in meters, and follow NWU conventions.
@@ -111,22 +111,22 @@ public class RobotContainer {
     // to deal with for the Romi), you can use the Units.inchesToMeters() method
     Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
         // Start at the origin facing the +X direction
+        /*List.of(
+          new Pose2d(0, 0, new Rotation2d(0)),
+          new Pose2d(Units.inchesToMeters(15.5), Units.inchesToMeters(15.5), new Rotation2d(Math.PI / 2)),
+          new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
+        )*/
         List.of(
           new Pose2d(0, 0, new Rotation2d(0)),
-          new Pose2d(Units.inchesToMeters(15), Units.inchesToMeters(15), new Rotation2d(Math.PI / 2)),
-          new Pose2d(Units.inchesToMeters(-8.5), Units.inchesToMeters(8.5), new Rotation2d(-Math.PI / 2))
+          new Pose2d(dxy, 0, new Rotation2d(0)),
+          new Pose2d(2.1*dxy, 1.25*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(1.25*dxy, 2*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(0, 1.25*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(-0.8*dxy, 2*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(dxy, 3.35*dxy, new Rotation2d(0))
+          //new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
         ),
         config);
-      /*String trajectoryJSON = "paths/small.wpilib.json";
-      Trajectory tempTrajectory = new Trajectory();
-      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
-      try {
-        tempTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
-      } catch (IOException ex) {
-        DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
-      }
-      Transform2d transform = m_drivetrain.getPose().minus(tempTrajectory.getInitialPose());
-      Trajectory exampleTrajectory = tempTrajectory.transformBy(transform);*/
 
     RamseteCommand ramseteCommand = new RamseteCommand(
         exampleTrajectory,
