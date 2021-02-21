@@ -7,6 +7,7 @@ package frc.robot;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -57,6 +58,8 @@ public class RobotContainer {
 
   // Create SmartDashboard chooser for autonomous routines
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
+
+  private int teleopDriveSide = 1;
 
   // NOTE: The I/O pin functionality of the 5 exposed I/O pins depends on the hardware "overlay"
   // that is specified when launching the wpilib-ws server on the Romi raspberry pi.
@@ -119,11 +122,11 @@ public class RobotContainer {
         List.of(
           new Pose2d(0, 0, new Rotation2d(0)),
           new Pose2d(dxy, 0, new Rotation2d(0)),
-          new Pose2d(2.1*dxy, 1.25*dxy, new Rotation2d(Math.PI / 2)),
-          new Pose2d(1.25*dxy, 2*dxy, new Rotation2d(Math.PI)),
-          new Pose2d(0, 1.25*dxy, new Rotation2d(Math.PI)),
-          new Pose2d(-0.8*dxy, 2*dxy, new Rotation2d(Math.PI / 2)),
-          new Pose2d(dxy, 3.35*dxy, new Rotation2d(0))
+          new Pose2d(2.2*dxy, 1.1*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(1.25*dxy, 2.1*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(0.15*dxy, 1.25*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(-0.95*dxy, 2.15*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(1.175*dxy, 3.2*dxy, new Rotation2d(0))
           //new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
         ),
         config);
@@ -177,6 +180,14 @@ public class RobotContainer {
     SmartDashboard.putData(m_chooser);
   }
 
+  public void flipTeleOpDriveSide() {
+    teleopDriveSide = teleopDriveSide == 1 ? -1 : 1;
+  }
+
+  public int getTeleOpDriveSide() {
+    return teleopDriveSide;
+  }
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -195,6 +206,8 @@ public class RobotContainer {
    */
   public Command getArcadeDriveCommand() {
     return new ArcadeDrive(
-        m_drivetrain, () -> -m_controller.getRawAxis(1), () -> m_controller.getRawAxis(4));
+        m_drivetrain, () -> -m_controller.getRawAxis(1), () -> m_controller.getRawAxis(4),
+        () -> m_controller.getRawAxis(2), () -> m_controller.getRawAxis(3),
+        () -> m_controller.getRawButtonPressed(6));
   }
 }

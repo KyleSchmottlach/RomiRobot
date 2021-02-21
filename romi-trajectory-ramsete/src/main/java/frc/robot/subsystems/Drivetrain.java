@@ -65,6 +65,11 @@ public class Drivetrain extends SubsystemBase {
     m_diffDrive.arcadeDrive(xaxisSpeed, zaxisRotate);
   }
 
+  public void tankDrive(double leftSpeed, double rightSpeed) {
+    m_leftMotor.set(leftSpeed);
+    m_rightMotor.set(rightSpeed);
+  }
+
   /**
    * Controls the left and right sides of the drive directly with voltages.
    * @param leftVolts the commanded left output
