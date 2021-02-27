@@ -120,27 +120,27 @@ public class RobotContainer {
           new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
         )*/
         //Values for max speed of 0.6 and max acceleration of 0.4
-        /*List.of(
-          new Pose2d(0, 0, new Rotation2d(0)),
-          new Pose2d(dxy, 0, new Rotation2d(0)),
-          new Pose2d(2.2*dxy, 1.15*dxy, new Rotation2d(Math.PI / 2)),
-          new Pose2d(1.25*dxy, 2.1*dxy, new Rotation2d(Math.PI)),
-          new Pose2d(0.15*dxy, 1.25*dxy, new Rotation2d(Math.PI)),
-          new Pose2d(-0.9*dxy, 2.2*dxy, new Rotation2d(Math.PI / 2)),
-          new Pose2d(1.175*dxy, 3.05*dxy, new Rotation2d(-Math.PI / 8))
-          //new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
-        ),*/
-        //Values for max speed of 0.7 and max acceleration of 0.5
         List.of(
           new Pose2d(0, 0, new Rotation2d(0)),
           new Pose2d(dxy, 0, new Rotation2d(0)),
           new Pose2d(2.2*dxy, 1.15*dxy, new Rotation2d(Math.PI / 2)),
-          new Pose2d(1.25*dxy, 2*dxy, new Rotation2d(Math.PI)),
-          new Pose2d(0.15*dxy, 1.2*dxy, new Rotation2d(Math.PI)),
-          new Pose2d(-1.1*dxy, 2.1*dxy, new Rotation2d(Math.PI / 2)),
-          new Pose2d(2.1*dxy, 3*dxy, new Rotation2d(-Math.PI / 8))
+          new Pose2d(1.25*dxy, 2.1*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(0.15*dxy, 1.3*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(-1*dxy, 2.2*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(1.3*dxy, 3.05*dxy, new Rotation2d(-Math.PI / 8))
           //new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
         ),
+        //Values for max speed of 0.7 and max acceleration of 0.5
+        /*List.of(
+          new Pose2d(0, 0, new Rotation2d(0)),
+          new Pose2d(dxy, 0, new Rotation2d(0)),
+          new Pose2d(2.2*dxy, 1.25*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(1.25*dxy, 2.05*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(0.15*dxy, 1.3*dxy, new Rotation2d(Math.PI)),
+          new Pose2d(-1.15*dxy, 2*dxy, new Rotation2d(Math.PI / 2)),
+          new Pose2d(1.9*dxy, 2.75*dxy, new Rotation2d(-Math.PI / 8))
+          //new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
+        ),*/
         //WIP of max speed of 0.8 and max acceleration of 0.6
         /*List.of(
           new Pose2d(0, 0, new Rotation2d(0)),
