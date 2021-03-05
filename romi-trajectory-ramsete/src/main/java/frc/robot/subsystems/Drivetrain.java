@@ -4,17 +4,19 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.sensors.RomiGyro;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -43,12 +45,17 @@ public class Drivetrain extends SubsystemBase {
 
   // Odometry class for tracking robot pose
   private final DifferentialDriveOdometry m_odometry;
+  private final DifferentialDriveKinematics kinematics;
+  
+  private final SimpleMotorFeedforward feedforward;
+
+  private final PIDController leftPIDController;
+  private final PIDController rightPIDController;
+
+  private Pose2d pose;
 
   // Also show a field diagram
   private final Field2d m_field2d = new Field2d();
-
-  private NetworkTableEntry m_xEntry = NetworkTableInstance.getDefault().getTable("troubleshooting").getEntry("X");
-  private NetworkTableEntry m_yEntry = NetworkTableInstance.getDefault().getTable("troubleshooting").getEntry("Y");
 
   /** Creates a new Drivetrain. */
   public Drivetrain() {
@@ -58,6 +65,13 @@ public class Drivetrain extends SubsystemBase {
     resetEncoders();
 
     m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
+    kinematics = new DifferentialDriveKinematics(0.141);
+
+    leftPIDController = new PIDController(Constants.DriveConstants.kPDriveVel, 0, 0);
+    rightPIDController = new PIDController(Constants.DriveConstants.kPDriveVel, 0, 0);
+
+    feedforward = new SimpleMotorFeedforward(Constants.DriveConstants.ksVolts, Constants.DriveConstants.kvVoltSecondsPerMeter, Constants.DriveConstants.kaVoltSecondsSquaredPerMeter);
+
     SmartDashboard.putData("field", m_field2d);
   }
 
@@ -168,20 +182,22 @@ public class Drivetrain extends SubsystemBase {
   public void updateDashboard() {
     SmartDashboard.putNumber("Right Encoder", getRightEncoderCount());
     SmartDashboard.putNumber("Left Encoder", getLeftEncoderCount());
-    SmartDashboard.putNumber("Right Distance", getRightDistanceMeter());
-    SmartDashboard.putNumber("Left Distance", getLeftDistanceMeter());
-    SmartDashboard.putNumber("Odometry X", m_xEntry.getDouble(0));
-    SmartDashboard.putNumber("Odometry Y", m_yEntry.getDouble(0));
+
+    SmartDashboard.putNumber("X Acceleration", getAccelX());
+    SmartDashboard.putNumber("Y Acceleration", getAccelY());
+    SmartDashboard.putNumber("Gyro X Angle", getGyroAngleX());
+    SmartDashboard.putNumber("Gyro Y Angle", getGyroAngleY());
+    SmartDashboard.putNumber("Left Distance Meters", getLeftDistanceMeter());
+    SmartDashboard.putNumber("Right Distance Meters", getRightDistanceMeter());
   }
 
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
-    m_odometry.update(m_gyro.getRotation2d().fromDegrees(getHeading()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    pose = m_odometry.update(m_gyro.getRotation2d(), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
 
-    var translation = m_odometry.getPoseMeters().getTranslation();
-    m_xEntry.setNumber(translation.getX());
-    m_yEntry.setNumber(translation.getY());
+    SmartDashboard.putNumber("Odometry X", pose.getX());
+    SmartDashboard.putNumber("Odometry Y", pose.getY());
     
     // Also update the Field2D object (so that we can visualize this in sim)
     m_field2d.setRobotPose(getPose());
@@ -192,7 +208,7 @@ public class Drivetrain extends SubsystemBase {
    * @return The pose
    */
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    return pose;
   }
 
   /**
@@ -241,5 +257,21 @@ public class Drivetrain extends SubsystemBase {
    */
   public double getTurnRate() {
     return -m_gyro.getRate();
+  }
+
+  public DifferentialDriveKinematics getKinematics() {
+    return kinematics;
+  }
+
+  public SimpleMotorFeedforward getFeedforward() {
+    return feedforward;
+  }
+
+  public PIDController getLeftPIDController() {
+    return leftPIDController;
+  }
+
+  public PIDController getRightPIDController() {
+    return rightPIDController;
   }
 }

@@ -4,22 +4,15 @@
 
 package frc.robot;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.geometry.Translation2d;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.commands.ArcadeDrive;
@@ -33,11 +26,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
@@ -76,6 +67,8 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
+    SmartDashboard.putNumber("Left Volts", 0);
+    SmartDashboard.putNumber("Right Volts", 0);
   }
 
   public void updateDashboard() {
@@ -112,7 +105,7 @@ public class RobotContainer {
     // Note that all coordinates are in meters, and follow NWU conventions.
     // If you would like to specify coordinates in inches (which might be easier
     // to deal with for the Romi), you can use the Units.inchesToMeters() method
-    Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+    Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
         // Start at the origin facing the +X direction
         /*List.of(
           new Pose2d(0, 0, new Rotation2d(0)),
@@ -157,27 +150,24 @@ public class RobotContainer {
         config);
 
     RamseteCommand ramseteCommand = new RamseteCommand(
-        exampleTrajectory,
+        trajectory,
         m_drivetrain::getPose,
         new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
-        new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
-        DriveConstants.kDriveKinematics,
+        m_drivetrain.getFeedforward(),
+        m_drivetrain.getKinematics(),
         m_drivetrain::getWheelSpeeds,
-        new PIDController(DriveConstants.kPDriveVel, 0, 0),
-        new PIDController(DriveConstants.kPDriveVel, 0, 0),
-        m_drivetrain::tankDriveVolts,
+        m_drivetrain.getLeftPIDController(),
+        m_drivetrain.getRightPIDController(),
+        (leftVolts, rightVolts) -> {
+          m_drivetrain.tankDriveVolts(leftVolts, rightVolts);
+          SmartDashboard.putNumber("Left Volts", leftVolts);
+          SmartDashboard.putNumber("Right Volts", rightVolts);
+        },
         m_drivetrain);
 
-    m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
+    m_drivetrain.resetOdometry(trajectory.getInitialPose());
 
-    // Set up a sequence of commands
-    // First, we want to reset the drivetrain odometry
-    return new InstantCommand(() -> m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_drivetrain)
-        // next, we run the actual ramsete command
-        .andThen(ramseteCommand)
-
-        // Finally, we make sure that the robot stops
-        .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
+    return ramseteCommand.andThen(() -> m_drivetrain.tankDriveVolts(0, 0));
   } 
 
   /**
