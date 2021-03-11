@@ -55,7 +55,7 @@ public class ArcadeDrive extends CommandBase {
       m_drivetrain.tankDrive(Robot.getRobotContainer().getTeleOpDriveSide() * leftTankDrive.get(), 
       Robot.getRobotContainer().getTeleOpDriveSide() * -rightTankDrive.get());
     } else {
-      m_drivetrain.arcadeDrive(Robot.getRobotContainer().getTeleOpDriveSide() * m_xaxisSpeedSupplier.get(), 0.7 * m_zaxisRotateSupplier.get());
+      m_drivetrain.arcadeDrive(Robot.getRobotContainer().getTeleOpDriveSide() * m_xaxisSpeedSupplier.get(), 0.9 * m_zaxisRotateSupplier.get());
     }
   }
 
