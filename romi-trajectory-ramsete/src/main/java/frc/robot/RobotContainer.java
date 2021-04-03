@@ -75,6 +75,7 @@ public class RobotContainer {
 
   private Trajectory mondrianMadnessTrajectory;
   private Trajectory barrelRaceTrajectory;
+  private Trajectory slalomRaceTrajectory;
 
   private int teleopDriveSide = 1;
 
@@ -127,20 +128,35 @@ public class RobotContainer {
     barrelRaceTrajectory = trajectoryForPath(
       List.of(
         new Pose2d(0, 0, new Rotation2d()),
-        new Pose2d(3*dxy, 0, new Rotation2d()),
+        new Pose2d(4*dxy, 0, new Rotation2d()),
         new Pose2d(5*dxy, -dxy, new Rotation2d(-Math.PI / 2)),
-        new Pose2d(4*dxy, -2*dxy, new Rotation2d(Math.PI)),
         new Pose2d(3*dxy, -dxy, new Rotation2d((-3*Math.PI) / 2)),
-        new Pose2d(7*dxy, -dxy, new Rotation2d(Math.PI / 6)),
-        new Pose2d(8*dxy, dxy, new Rotation2d(Math.PI / 2)),
+        new Pose2d(5*dxy, 0, new Rotation2d()),
+        new Pose2d(7*dxy, -1.5*dxy, new Rotation2d()),
         new Pose2d(7*dxy, 2*dxy, new Rotation2d(Math.PI)),
         new Pose2d(6*dxy, dxy, new Rotation2d((7*Math.PI) / 4)),
-        new Pose2d(9*dxy, -2*dxy, new Rotation2d(Math.PI / 6)),
-        new Pose2d(10*dxy, -dxy, new Rotation2d(Math.PI / 2)),
-        new Pose2d(9*dxy, 0, new Rotation2d(Math.PI)),
-        new Pose2d(0, 0, new Rotation2d(Math.PI))
+        new Pose2d(9*dxy, -2.5*dxy, new Rotation2d()),
+        new Pose2d(9*dxy, 0, new Rotation2d((3*Math.PI) / 4)),
+        new Pose2d(-dxy, 0, new Rotation2d((3*Math.PI) / 4))
       ), 
     false);
+
+    slalomRaceTrajectory = trajectoryForPath(
+      List.of(new Pose2d(0, 0, new Rotation2d()),
+        new Pose2d(1.5*dxy, 1.5*dxy, new Rotation2d(Math.PI / 3)),
+        new Pose2d(4*dxy, 2*dxy, new Rotation2d(-Math.PI / 6)),
+        new Pose2d(7*dxy, dxy, new Rotation2d()),
+        new Pose2d(7.5*dxy, dxy, new Rotation2d(-Math.PI / 3)),
+        //new Pose2d(9*dxy, 0, new Rotation2d(Math.PI / 6)),
+        new Pose2d(10*dxy, 2*dxy, new Rotation2d(Math.PI / 2)),
+        new Pose2d(9*dxy, 2.5*dxy, new Rotation2d(Math.PI)),
+        new Pose2d(8*dxy, 0, new Rotation2d((7*Math.PI) / 6)),
+        new Pose2d(6.5*dxy, 0, new Rotation2d(Math.PI)),
+        new Pose2d(3*dxy, 0, new Rotation2d(Math.PI)),
+        new Pose2d(1.75*dxy, 1.5*dxy, new Rotation2d((5*Math.PI) / 6)),
+        new Pose2d(0, dxy, new Rotation2d(Math.PI))
+      ), 
+      false);
   }
 
   public void updateDashboard() {
@@ -394,8 +410,8 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return m_chooser.getSelected();
-    
+    //return m_chooser.getSelected();
+    return ramseteCommandForTrajectory(slalomRaceTrajectory);
 
   }
 

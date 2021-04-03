@@ -90,7 +90,7 @@ public class Drivetrain extends SubsystemBase {
    * @param rightVolts the commanded right output
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
-    m_leftMotor.setVoltage(leftVolts);
+    m_leftMotor.setVoltage(leftVolts+ 0.75);
     m_rightMotor.setVoltage(-rightVolts); // We invert this to maintain +ve = forward
     m_diffDrive.feed();
   }
@@ -225,6 +225,7 @@ public class Drivetrain extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     resetEncoders();
+    m_gyro.reset();
     m_odometry.resetPosition(pose, m_gyro.getRotation2d());
   }
 
