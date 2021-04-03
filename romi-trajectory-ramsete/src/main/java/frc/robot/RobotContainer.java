@@ -71,6 +71,11 @@ public class RobotContainer {
   // Create SmartDashboard chooser for autonomous routines
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
 
+  private final double dxy = Units.inchesToMeters(7.5);
+
+  private Trajectory mondrianMadnessTrajectory;
+  private Trajectory barrelRaceTrajectory;
+
   private int teleopDriveSide = 1;
 
   // NOTE: The I/O pin functionality of the 5 exposed I/O pins depends on the hardware "overlay"
@@ -97,45 +102,17 @@ public class RobotContainer {
     bottomPOVButton = new POVButton(m_controller, 180, 0);
     leftPOVButton = new POVButton(m_controller, 270, 0);
 
+    generateTrajectories();
     // Configure the button bindings
     configureButtonBindings();
+
     SmartDashboard.putNumber("Left Volts", 0);
     SmartDashboard.putNumber("Right Volts", 0);
   }
 
-  public void updateDashboard() {
-    m_drivetrain.updateDashboard();
-  }
-
-  /**
-   * Generate a trajectory following Ramsete command
-   * 
-   * This is very similar to the WPILib RamseteCommand example. It uses
-   * constants defined in the Constants.java file. These constants were 
-   * found empirically by using the frc-characterization tool.
-   * 
-   * @return A SequentialCommand that sets up and executes a trajectory following Ramsete command
-   */
-  private Command generateRamseteCommand() {
-    var autoVoltageConstraint =
-        new DifferentialDriveVoltageConstraint(
-            new SimpleMotorFeedforward(DriveConstants.ksVolts, 
-                                       DriveConstants.kvVoltSecondsPerMeter, 
-                                       DriveConstants.kaVoltSecondsSquaredPerMeter),
-            DriveConstants.kDriveKinematics,
-            10);
-
-    TrajectoryConfig config =
-        new TrajectoryConfig(AutoConstants.kMaxSpeedMetersPerSecond, 
-                             AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-            .setKinematics(DriveConstants.kDriveKinematics)
-            .addConstraint(autoVoltageConstraint);
-
-    final double dxy = Units.inchesToMeters(8.0);
-
-    Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
-        //Values for max speed of 0.6 and max acceleration of 0.4
-        List.of(
+  private void generateTrajectories() {
+    mondrianMadnessTrajectory = trajectoryForPath(
+      List.of(
           new Pose2d(0, 0, new Rotation2d(0)),
           new Pose2d(dxy, 0, new Rotation2d(0)),
           new Pose2d(2.2*dxy, 1.15*dxy, new Rotation2d(Math.PI / 2)),
@@ -144,29 +121,31 @@ public class RobotContainer {
           new Pose2d(-1*dxy, 2.2*dxy, new Rotation2d(Math.PI / 2)),
           new Pose2d(1.3*dxy, 3.05*dxy, new Rotation2d(-Math.PI / 8))
           //new Pose2d(Units.inchesToMeters(-3.5), Units.inchesToMeters(6.5), new Rotation2d(Math.PI / 2))
-        ),
-        config);
+        ), 
+      false);
 
-    RamseteCommand ramseteCommand = new RamseteCommand(
-        trajectory,
-        m_drivetrain::getPose,
-        new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
-        m_drivetrain.getFeedforward(),
-        m_drivetrain.getKinematics(),
-        m_drivetrain::getWheelSpeeds,
-        m_drivetrain.getLeftPIDController(),
-        m_drivetrain.getRightPIDController(),
-        (leftVolts, rightVolts) -> {
-          m_drivetrain.tankDriveVolts(leftVolts, rightVolts);
-          SmartDashboard.putNumber("Left Volts", leftVolts);
-          SmartDashboard.putNumber("Right Volts", rightVolts);
-        },
-        m_drivetrain);
+    barrelRaceTrajectory = trajectoryForPath(
+      List.of(
+        new Pose2d(0, 0, new Rotation2d()),
+        new Pose2d(3*dxy, 0, new Rotation2d()),
+        new Pose2d(5*dxy, -dxy, new Rotation2d(-Math.PI / 2)),
+        new Pose2d(4*dxy, -2*dxy, new Rotation2d(Math.PI)),
+        new Pose2d(3*dxy, -dxy, new Rotation2d((-3*Math.PI) / 2)),
+        new Pose2d(7*dxy, -dxy, new Rotation2d(Math.PI / 6)),
+        new Pose2d(8*dxy, dxy, new Rotation2d(Math.PI / 2)),
+        new Pose2d(7*dxy, 2*dxy, new Rotation2d(Math.PI)),
+        new Pose2d(6*dxy, dxy, new Rotation2d((7*Math.PI) / 4)),
+        new Pose2d(9*dxy, -2*dxy, new Rotation2d(Math.PI / 6)),
+        new Pose2d(10*dxy, -dxy, new Rotation2d(Math.PI / 2)),
+        new Pose2d(9*dxy, 0, new Rotation2d(Math.PI)),
+        new Pose2d(0, 0, new Rotation2d(Math.PI))
+      ), 
+    false);
+  }
 
-    m_drivetrain.resetOdometry(trajectory.getInitialPose());
-
-    return ramseteCommand.andThen(() -> m_drivetrain.tankDriveVolts(0, 0));
-  } 
+  public void updateDashboard() {
+    m_drivetrain.updateDashboard();
+  }
 
   private Trajectory trajectoryForPath(List<Pose2d> path, boolean reversed) {
     var autoVoltageConstraint =
@@ -191,7 +170,7 @@ public class RobotContainer {
       return trajectory;
   }
 
-  private RamseteCommand ramseteCommandForTrajectory(Trajectory trajectory) {
+  private Command ramseteCommandForTrajectory(Trajectory trajectory) {
     RamseteCommand ramseteCommand = new RamseteCommand(
         trajectory,
         m_drivetrain::getPose,
@@ -204,12 +183,13 @@ public class RobotContainer {
         m_drivetrain::tankDriveVolts,
         m_drivetrain);
 
-    return ramseteCommand;
+    m_drivetrain.resetOdometry(trajectory.getInitialPose());
+    return ramseteCommand.andThen(() -> m_drivetrain.arcadeDrive(0, 0));
   }
 
   private Command ramseteCommandForPath(List<Pose2d> path, boolean reversed) {
     Trajectory trajectory = trajectoryForPath(path, reversed);
-    RamseteCommand ramseteCommand = ramseteCommandForTrajectory(trajectory);
+    Command ramseteCommand = ramseteCommandForTrajectory(trajectory);
 
     // Set up a sequence of commands
     // First, we want to reset the drivetrain odometry
@@ -219,9 +199,9 @@ public class RobotContainer {
         // Finally, we make sure that the robot stops
         .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
   } 
-  private RamseteCommand immediateRamseteCommand(List<Pose2d> path, boolean reversed) {
+  private Command immediateRamseteCommand(List<Pose2d> path, boolean reversed) {
     Trajectory trajectory = trajectoryForPath(path, reversed);
-    RamseteCommand ramseteCommand = ramseteCommandForTrajectory(trajectory);
+    Command ramseteCommand = ramseteCommandForTrajectory(trajectory);
 
     // Since this method is meant to be used for generating continuous drive control paths,
     // we don't interrupt/reset the odometry or stop the motors at the end of the path. 
@@ -393,7 +373,7 @@ public class RobotContainer {
         .whenInactive(new PrintCommand("Button A Released"));
 
     // Setup SmartDashboard options
-    m_chooser.setDefaultOption("Ramsete Trajectory", generateRamseteCommand());
+    m_chooser.setDefaultOption("Ramsete Trajectory", ramseteCommandForTrajectory(barrelRaceTrajectory));
     m_chooser.addOption("Auto Routine Distance", new AutonomousDistance(m_drivetrain));
     m_chooser.addOption("Auto Routine Time", new AutonomousTime(m_drivetrain));
     
