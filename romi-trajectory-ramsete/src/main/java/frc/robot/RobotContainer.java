@@ -199,6 +199,8 @@ public class RobotContainer {
         m_drivetrain::tankDriveVolts,
         m_drivetrain);
 
+    m_drivetrain.plotTrajectory(trajectory);
+
     m_drivetrain.resetOdometry(trajectory.getInitialPose());
     return ramseteCommand.andThen(() -> m_drivetrain.arcadeDrive(0, 0));
   }
