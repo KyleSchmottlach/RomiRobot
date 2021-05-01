@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
@@ -68,6 +69,8 @@ public class RobotContainer {
   private final POVButton bottomPOVButton;
   private final POVButton leftPOVButton;
 
+  private SequentialCommandGroup bouncePathCommandGroup;
+
   // Create SmartDashboard chooser for autonomous routines
   private final SendableChooser<Command> m_chooser = new SendableChooser<>();
 
@@ -76,6 +79,10 @@ public class RobotContainer {
   private Trajectory mondrianMadnessTrajectory;
   private Trajectory barrelRaceTrajectory;
   private Trajectory slalomRaceTrajectory;
+  private Trajectory bounceTrajectory1;
+  private Trajectory bounceTrajectory2;
+  private Trajectory bounceTrajectory3;
+  private Trajectory bounceTrajectory4;
 
   private int teleopDriveSide = 1;
 
@@ -106,6 +113,17 @@ public class RobotContainer {
     generateTrajectories();
     // Configure the button bindings
     configureButtonBindings();
+
+    bouncePathCommandGroup = new SequentialCommandGroup(
+      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory1.getInitialPose())),
+      ramseteCommandForTrajectory(bounceTrajectory1),
+      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory2.getInitialPose())),
+      ramseteCommandForTrajectory(bounceTrajectory2),
+      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory3.getInitialPose())),
+      ramseteCommandForTrajectory(bounceTrajectory3),
+      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory4.getInitialPose())),
+      ramseteCommandForTrajectory(bounceTrajectory4)
+    );
 
     SmartDashboard.putNumber("Left Volts", 0);
     SmartDashboard.putNumber("Right Volts", 0);
@@ -157,6 +175,39 @@ public class RobotContainer {
         new Pose2d(0, dxy, new Rotation2d(Math.PI))
       ), 
       false);
+
+    bounceTrajectory1 = trajectoryForPath(
+      List.of(new Pose2d(0, 0, new Rotation2d()),
+        new Pose2d(1.15*dxy, -1.6*dxy, new Rotation2d(-Math.PI / 2))
+      ), 
+      false);
+    
+    bounceTrajectory2 = trajectoryForPath(
+      List.of(
+        new Pose2d(0, 0, new Rotation2d(Math.PI)),
+        new Pose2d(1.25*dxy, -0.5*dxy, new Rotation2d(5*Math.PI / 6)),
+        new Pose2d(3*dxy, -1.6*dxy, new Rotation2d(Math.PI / 2)),
+        new Pose2d(2*dxy, -2.75*dxy, new Rotation2d()),
+        new Pose2d(-0.15*dxy, -2.75*dxy, new Rotation2d())
+      ), 
+      true);
+
+    bounceTrajectory3 = trajectoryForPath(
+      List.of(
+        new Pose2d(0, 0, new Rotation2d()),
+        new Pose2d(2.5*dxy, 0, new Rotation2d()),
+        new Pose2d(3*dxy, -1.5*dxy, new Rotation2d(-Math.PI / 2)),
+        new Pose2d(2*dxy, -2.75*dxy, new Rotation2d(Math.PI)),
+        new Pose2d(-0.15*dxy, -3*dxy, new Rotation2d((-5*Math.PI) / 6))
+      ), 
+      false);
+
+    bounceTrajectory4 = trajectoryForPath(
+      List.of(
+        new Pose2d(0, 0, new Rotation2d(Math.PI)),
+        new Pose2d(0.75*dxy, -2*dxy, new Rotation2d(Math.PI / 2))
+      ), 
+      true);
   }
 
   public void updateDashboard() {
