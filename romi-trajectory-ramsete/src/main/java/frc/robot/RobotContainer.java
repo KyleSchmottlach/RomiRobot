@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.trajectory.constraint.CentripetalAccelerationConstraint;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,7 +49,7 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final Drivetrain m_drivetrain = new Drivetrain();
+  private final Drivetrain m_drivetrain;
   private final OnBoardIO m_onboardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
 
   // 1153: Path Recorder functionality:
@@ -69,10 +71,10 @@ public class RobotContainer {
   private final POVButton bottomPOVButton;
   private final POVButton leftPOVButton;
 
-  private SequentialCommandGroup bouncePathCommandGroup;
+  private SequentialCommandGroup franticFetchCommandGroup;
 
   // Create SmartDashboard chooser for autonomous routines
-  private final SendableChooser<Command> m_chooser = new SendableChooser<>();
+  private final SendableChooser<Supplier<Command>> m_chooser = new SendableChooser<>();
 
   private final double dxy = Units.inchesToMeters(7.5);
 
@@ -99,6 +101,8 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    m_drivetrain = new Drivetrain();
+
     m_controller = new XboxController(0);
     buttonA = new JoystickButton(m_controller, XboxController.Button.kA.value);
     buttonB = new JoystickButton(m_controller, XboxController.Button.kB.value);
@@ -110,20 +114,33 @@ public class RobotContainer {
     bottomPOVButton = new POVButton(m_controller, 180, 0);
     leftPOVButton = new POVButton(m_controller, 270, 0);
 
-    generateTrajectories();
-    // Configure the button bindings
     configureButtonBindings();
+    generateTrajectories();
+  
+    franticFetchCommandGroup = new SequentialCommandGroup(
+        new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory1.getInitialPose())),
+        ramseteCommandForTrajectory(bounceTrajectory1),
+        new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory2.getInitialPose())),
+        ramseteCommandForTrajectory(bounceTrajectory2),
+        new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory3.getInitialPose())),
+        ramseteCommandForTrajectory(bounceTrajectory3),
+        new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory4.getInitialPose())),
+        ramseteCommandForTrajectory(bounceTrajectory4)
+      );
 
-    bouncePathCommandGroup = new SequentialCommandGroup(
-      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory1.getInitialPose())),
-      ramseteCommandForTrajectory(bounceTrajectory1),
-      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory2.getInitialPose())),
-      ramseteCommandForTrajectory(bounceTrajectory2),
-      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory3.getInitialPose())),
-      ramseteCommandForTrajectory(bounceTrajectory3),
-      new InstantCommand(() -> m_drivetrain.resetOdometry(bounceTrajectory4.getInitialPose())),
-      ramseteCommandForTrajectory(bounceTrajectory4)
-    );
+    
+
+    m_chooser.setDefaultOption("Bounce 1", () -> ramseteCommandForTrajectory(bounceTrajectory1));
+    m_chooser.addOption("Frantic Fetch", () -> franticFetchCommandGroup);
+    m_chooser.addOption("Bounce 2", () -> ramseteCommandForTrajectory(bounceTrajectory2));
+    m_chooser.addOption("Bounce 3", () -> ramseteCommandForTrajectory(bounceTrajectory3));
+    m_chooser.addOption("Bounce 4", () -> ramseteCommandForTrajectory(bounceTrajectory4));
+    m_chooser.addOption("Auto Routine Distance", () -> new AutonomousDistance(m_drivetrain));
+    m_chooser.addOption("Auto Routine Time", () -> new AutonomousTime(m_drivetrain));
+
+    SmartDashboard.putData(m_chooser);
+
+    m_drivetrain.setDefaultCommand(getArcadeDriveCommand());
 
     SmartDashboard.putNumber("Left Volts", 0);
     SmartDashboard.putNumber("Right Volts", 0);
@@ -178,17 +195,17 @@ public class RobotContainer {
 
     bounceTrajectory1 = trajectoryForPath(
       List.of(new Pose2d(0, 0, new Rotation2d()),
-        new Pose2d(1.15*dxy, -1.6*dxy, new Rotation2d(-Math.PI / 2))
+        new Pose2d(1.5*dxy, 2*dxy, new Rotation2d(2*Math.PI / 3))
       ), 
       false);
     
     bounceTrajectory2 = trajectoryForPath(
       List.of(
         new Pose2d(0, 0, new Rotation2d(Math.PI)),
-        new Pose2d(1.25*dxy, -0.5*dxy, new Rotation2d(5*Math.PI / 6)),
-        new Pose2d(3*dxy, -1.6*dxy, new Rotation2d(Math.PI / 2)),
-        new Pose2d(2*dxy, -2.75*dxy, new Rotation2d()),
-        new Pose2d(-0.15*dxy, -2.75*dxy, new Rotation2d())
+        new Pose2d(1.25*dxy, 0.5*dxy, new Rotation2d(-5*Math.PI / 6)),
+        new Pose2d(3*dxy, 1.6*dxy, new Rotation2d(-Math.PI / 2)),
+        new Pose2d(2*dxy, 2.75*dxy, new Rotation2d()),
+        new Pose2d(-0.15*dxy, 2.75*dxy, new Rotation2d())
       ), 
       true);
 
@@ -196,16 +213,16 @@ public class RobotContainer {
       List.of(
         new Pose2d(0, 0, new Rotation2d()),
         new Pose2d(2.5*dxy, 0, new Rotation2d()),
-        new Pose2d(3*dxy, -1.5*dxy, new Rotation2d(-Math.PI / 2)),
-        new Pose2d(2*dxy, -2.75*dxy, new Rotation2d(Math.PI)),
-        new Pose2d(-0.15*dxy, -3*dxy, new Rotation2d((-5*Math.PI) / 6))
+        new Pose2d(3*dxy, 1.5*dxy, new Rotation2d(Math.PI / 2)),
+        new Pose2d(2*dxy, 2.75*dxy, new Rotation2d(Math.PI)),
+        new Pose2d(-0.15*dxy, 3*dxy, new Rotation2d((5*Math.PI) / 6))
       ), 
       false);
 
     bounceTrajectory4 = trajectoryForPath(
       List.of(
         new Pose2d(0, 0, new Rotation2d(Math.PI)),
-        new Pose2d(0.75*dxy, -2*dxy, new Rotation2d(Math.PI / 2))
+        new Pose2d(0.75*dxy, 2*dxy, new Rotation2d(-Math.PI / 2))
       ), 
       true);
   }
@@ -250,7 +267,7 @@ public class RobotContainer {
         m_drivetrain::tankDriveVolts,
         m_drivetrain);
 
-    m_drivetrain.plotTrajectory(trajectory);
+    //m_drivetrain.plotTrajectory(trajectory);
 
     m_drivetrain.resetOdometry(trajectory.getInitialPose());
     return ramseteCommand.andThen(() -> m_drivetrain.arcadeDrive(0, 0));
@@ -433,20 +450,11 @@ public class RobotContainer {
     bottomPOVButton.whenPressed(() -> translateDrive(-0.2, 0.0));
     leftPOVButton.whenPressed(() -> translateDrive(0.20, Math.PI/4));
 
-    m_drivetrain.setDefaultCommand(getArcadeDriveCommand());
-
     // Example of how to use the onboard IO
     Button onboardButtonA = new Button(m_onboardIO::getButtonAPressed);
     onboardButtonA
         .whenActive(new PrintCommand("Button A Pressed"))
         .whenInactive(new PrintCommand("Button A Released"));
-
-    // Setup SmartDashboard options
-    m_chooser.setDefaultOption("Ramsete Trajectory", ramseteCommandForTrajectory(barrelRaceTrajectory));
-    m_chooser.addOption("Auto Routine Distance", new AutonomousDistance(m_drivetrain));
-    m_chooser.addOption("Auto Routine Time", new AutonomousTime(m_drivetrain));
-    
-    SmartDashboard.putData(m_chooser);
   }
 
   public void flipTeleOpDriveSide() {
@@ -463,9 +471,9 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    //return m_chooser.getSelected();
-    return ramseteCommandForTrajectory(slalomRaceTrajectory);
-
+    return m_chooser.getSelected().get();
+    //return ramseteCommandForTrajectory(slalomRaceTrajectory);
+    //return franticFetchCommandGroup;
   }
 
   /**

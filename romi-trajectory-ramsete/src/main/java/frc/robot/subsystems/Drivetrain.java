@@ -191,6 +191,7 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("Y Acceleration", getAccelY());
     SmartDashboard.putNumber("Gyro X Angle", getGyroAngleX());
     SmartDashboard.putNumber("Gyro Y Angle", getGyroAngleY());
+    SmartDashboard.putNumber("Gyro Z Angle", getGyroAngleZ());
     SmartDashboard.putNumber("Left Distance Meters", getLeftDistanceMeter());
     SmartDashboard.putNumber("Right Distance Meters", getRightDistanceMeter());
   }
@@ -202,6 +203,7 @@ public class Drivetrain extends SubsystemBase {
 
     SmartDashboard.putNumber("Odometry X", pose.getX());
     SmartDashboard.putNumber("Odometry Y", pose.getY());
+    SmartDashboard.putNumber("Odometry Rotation", pose.getRotation().getDegrees());
     
     // Also update the Field2D object (so that we can visualize this in sim)
     m_field2d.setRobotPose(getPose());
