@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import frc.robot.subsystems.Drivetrain;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class TurnDegrees extends CommandBase {
@@ -32,12 +33,13 @@ public class TurnDegrees extends CommandBase {
   public void initialize() {
     // Set motors to stop, read encoder values for starting point
     m_drive.arcadeDrive(0, 0);
-    m_drive.resetEncoders();
+    m_drive.resetOdometry(new Pose2d());
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    System.out.println("Turning");
     m_drive.arcadeDrive(0, m_speed);
   }
 
@@ -57,12 +59,6 @@ public class TurnDegrees extends CommandBase {
     */
     double inchPerDegree = Math.PI * 5.551 / 360;
     // Compare distance travelled from start to distance based on degree turn
-    return getAverageTurningDistance() >= (inchPerDegree * m_degrees);
-  }
-
-  private double getAverageTurningDistance() {
-    double leftDistance = Math.abs(m_drive.getLeftDistanceMeter());
-    double rightDistance = Math.abs(m_drive.getRightDistanceMeter());
-    return (leftDistance + rightDistance) / 2.0;
+    return m_drive.getPose().getRotation().getDegrees() >= m_degrees;
   }
 }

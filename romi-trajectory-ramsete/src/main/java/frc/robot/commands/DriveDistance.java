@@ -5,9 +5,12 @@
 package frc.robot.commands;
 
 import frc.robot.subsystems.Drivetrain;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj2.command.PIDCommand;
+import edu.wpi.first.wpiutil.math.MathUtil;
 
-public class DriveDistance extends CommandBase {
+public class DriveDistance extends PIDCommand {
   private final Drivetrain m_drive;
   private final double m_distance;
   private final double m_speed;
@@ -20,24 +23,30 @@ public class DriveDistance extends CommandBase {
    * @param inches The number of inches the robot will drive
    * @param drive The drivetrain subsystem on which this command will run
    */
-  public DriveDistance(double speed, double inches, Drivetrain drive) {
-    m_distance = inches;
+  public DriveDistance(double speed, double meters, Drivetrain drive) {
+    super(
+      new PIDController(0.075, 0.06, 0), 
+      drive::getGyroAngleZ, 
+      0,
+      output -> {
+        double clampedOutput = MathUtil.clamp(output, -1, 1);
+        drive.arcadeDrive(speed, clampedOutput);
+      },
+      drive
+    );
+
+    m_distance = meters;
     m_speed = speed;
     m_drive = drive;
-    addRequirements(drive);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    super.initialize();
     m_drive.arcadeDrive(0, 0);
     m_drive.resetEncoders();
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    m_drive.arcadeDrive(m_speed, 0);
+    m_drive.resetOdometry(new Pose2d());
   }
 
   // Called once the command ends or is interrupted.
@@ -50,6 +59,6 @@ public class DriveDistance extends CommandBase {
   @Override
   public boolean isFinished() {
     // Compare distance travelled from start to desired distance
-    return Math.abs(m_drive.getAverageDistanceMeter()) >= m_distance;
+    return Math.abs(m_drive.getPose().getX()) >= m_distance;
   }
 }

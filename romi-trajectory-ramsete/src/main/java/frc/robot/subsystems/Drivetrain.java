@@ -196,6 +196,10 @@ public class Drivetrain extends SubsystemBase {
     SmartDashboard.putNumber("Right Distance Meters", getRightDistanceMeter());
   }
 
+  public void feedDifferentialDrive() {
+    m_diffDrive.feed();
+  }
+
   @Override
   public void periodic() {
     // Update the odometry in the periodic block

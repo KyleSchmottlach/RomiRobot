@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -21,6 +20,10 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.commands.ArcadeDrive;
 import frc.robot.commands.AutonomousDistance;
 import frc.robot.commands.AutonomousTime;
+import frc.robot.commands.DriveDistance;
+import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.TurnDegrees;
+import frc.robot.subsystems.Collector;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OnBoardIO;
 import frc.robot.subsystems.OnBoardIO.ChannelMode;
@@ -29,17 +32,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpilibj.trajectory.constraint.CentripetalAccelerationConstraint;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.Button;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -50,28 +49,14 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Drivetrain m_drivetrain;
+  private final Collector collector;
   private final OnBoardIO m_onboardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
-
-  // 1153: Path Recorder functionality:
-  private boolean m_record = false;
-  private Pose2d m_prevPose = new Pose2d();
-  private final double kRecordDelta = 0.001; // 0.01 = 1cm
-  private List<Pose2d> m_recordPath = new ArrayList<Pose2d>();
 
   // Assumes a gamepad plugged into channnel 0
   private final XboxController m_controller;
 
-  private final JoystickButton buttonA;
-  private final JoystickButton buttonB;
-  private final JoystickButton buttonX;
-  private final JoystickButton buttonY;
-
-  private final POVButton topPOVButton;
-  private final POVButton rightPOVButton;
-  private final POVButton bottomPOVButton;
-  private final POVButton leftPOVButton;
-
   private SequentialCommandGroup franticFetchCommandGroup;
+  private ParallelCommandGroup allianceAnticsCommandGroup;
 
   // Create SmartDashboard chooser for autonomous routines
   private final SendableChooser<Supplier<Command>> m_chooser = new SendableChooser<>();
@@ -85,6 +70,7 @@ public class RobotContainer {
   private Trajectory bounceTrajectory2;
   private Trajectory bounceTrajectory3;
   private Trajectory bounceTrajectory4;
+  private Trajectory forwardTrajectory;
 
   private int teleopDriveSide = 1;
 
@@ -102,17 +88,9 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     m_drivetrain = new Drivetrain();
+    collector = new Collector();
 
     m_controller = new XboxController(0);
-    buttonA = new JoystickButton(m_controller, XboxController.Button.kA.value);
-    buttonB = new JoystickButton(m_controller, XboxController.Button.kB.value);
-    buttonX = new JoystickButton(m_controller, XboxController.Button.kX.value);
-    buttonY = new JoystickButton(m_controller, XboxController.Button.kY.value);
-
-    topPOVButton = new POVButton(m_controller, 0, 0);
-    rightPOVButton = new POVButton(m_controller, 90, 0);
-    bottomPOVButton = new POVButton(m_controller, 180, 0);
-    leftPOVButton = new POVButton(m_controller, 270, 0);
 
     configureButtonBindings();
     generateTrajectories();
@@ -128,15 +106,24 @@ public class RobotContainer {
         ramseteCommandForTrajectory(bounceTrajectory4)
       );
 
-    
+    allianceAnticsCommandGroup = new ParallelCommandGroup(
+      new IntakeCommand(collector, 1),
+      new SequentialCommandGroup(
+        new DriveDistance(0.8, Units.inchesToMeters(10), m_drivetrain),
+        new TurnDegrees(0.8, -90, m_drivetrain)
+      )
+    );
 
     m_chooser.setDefaultOption("Bounce 1", () -> ramseteCommandForTrajectory(bounceTrajectory1));
     m_chooser.addOption("Frantic Fetch", () -> franticFetchCommandGroup);
     m_chooser.addOption("Bounce 2", () -> ramseteCommandForTrajectory(bounceTrajectory2));
     m_chooser.addOption("Bounce 3", () -> ramseteCommandForTrajectory(bounceTrajectory3));
     m_chooser.addOption("Bounce 4", () -> ramseteCommandForTrajectory(bounceTrajectory4));
+    m_chooser.addOption("Forward Trajectory", () -> ramseteCommandForTrajectory(forwardTrajectory));
     m_chooser.addOption("Auto Routine Distance", () -> new AutonomousDistance(m_drivetrain));
     m_chooser.addOption("Auto Routine Time", () -> new AutonomousTime(m_drivetrain));
+    m_chooser.addOption("Drive For Distance (75 inches)", () -> new DriveDistance(0.8, Units.inchesToMeters(60), m_drivetrain));
+    m_chooser.addOption("Alliance Antics Command Group", () -> allianceAnticsCommandGroup);
 
     SmartDashboard.putData(m_chooser);
 
@@ -225,6 +212,13 @@ public class RobotContainer {
         new Pose2d(0.75*dxy, 2*dxy, new Rotation2d(-Math.PI / 2))
       ), 
       true);
+
+    forwardTrajectory = trajectoryForPath(
+      List.of(
+        new Pose2d(),
+        new Pose2d(Units.inchesToMeters(75), 0, new Rotation2d())
+      ), 
+      false);
   }
 
   public void updateDashboard() {
@@ -285,6 +279,7 @@ public class RobotContainer {
         // Finally, we make sure that the robot stops
         .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
   } 
+
   private Command immediateRamseteCommand(List<Pose2d> path, boolean reversed) {
     Trajectory trajectory = trajectoryForPath(path, reversed);
     Command ramseteCommand = ramseteCommandForTrajectory(trajectory);
@@ -292,81 +287,6 @@ public class RobotContainer {
     // Since this method is meant to be used for generating continuous drive control paths,
     // we don't interrupt/reset the odometry or stop the motors at the end of the path. 
     return ramseteCommand;
-  }
-
-  @SuppressWarnings("unused")
-  private Command ramseteCommandForMySavedPath() {
-    return ramseteCommandForPath(
-      List.of(
-        new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
-        new Pose2d(0.010377342492793486, 2.6626632801004613E-4, new Rotation2d(0.08429630782081529)),
-        new Pose2d(0.020304816923615306, 0.0014845293441094367, new Rotation2d(0.12854580149869685)),
-        new Pose2d(0.030380183147045197, 0.0027582181871425764, new Rotation2d(0.13751835708718269)),
-        new Pose2d(0.04043942388648978, 0.004153498851978208, new Rotation2d(0.13218750719569722)),
-        new Pose2d(0.051325035933770774, 0.005703636512249553, new Rotation2d(0.14925765165738694)),
-        new Pose2d(0.06345928369800993, 0.007674885693290004, new Rotation2d(0.1731994110386956)),
-        new Pose2d(0.07500219174726039, 0.009915518019660025, new Rotation2d(0.2127550936025266)),
-        new Pose2d(0.08601740168044585, 0.012439798441654852, new Rotation2d(0.23734738781060172))
-      ), false);
-  }
-
-  // Print the recorded path to the console:
-  private void printMotionRecordPath() {
-    System.out.println("List.of(");
-    for (Pose2d pose : m_recordPath) {
-      System.out.println("  new Pose2d("+pose.getX()+", "+pose.getY()+", new Rotation2d("+pose.getRotation().getRadians()+")),");
-    }
-    System.out.println("); // TODO: Remember to remove the final trailing comma from the line above");
-  }
-
-  // Record the current robot location as a waypoint:
-  private void recordPose() {
-    Pose2d pose = m_drivetrain.getPose();
-    m_recordPath.add(pose);
-  }
-
-  // Erase any previously recorded waypoints:
-  private void eraseMotionRecord() {
-    m_recordPath = new ArrayList<Pose2d>();
-    m_prevPose = new Pose2d();
-    m_recordPath.add(m_prevPose);
-    m_drivetrain.resetOdometry(m_prevPose);
-  }
-
-  // Begin recording a new path:
-  private void startMotionRecord() {
-    eraseMotionRecord();
-    m_record = true;
-  }
-
-  // End recording:
-  private void stopMotionRecord() {
-    m_record = false;
-  }
-
-  // Play back the recorded path:
-  private void playMotionRecord() {
-    stopMotionRecord();
-    printMotionRecordPath();
-    ramseteCommandForPath(m_recordPath, false).schedule();
-  }
-
-  // If the robot has moved and we're recording, capture a new waypoint:
-  private void motionRecordPose() {
-    if (m_record)
-    {
-      Pose2d pose = m_drivetrain.getPose();
-      double distance = m_prevPose.getTranslation().getDistance(pose.getTranslation());
-      if (distance > kRecordDelta) {
-        m_prevPose = pose;
-        recordPose();        
-      }
-    }
-  }
-
-  public void teleopPeriodic() {
-    // 1153: Recordable trajectory support:
-    motionRecordPose();
   }
 
   public void testPeriodic() {
@@ -430,32 +350,7 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {
-    // B/Red: Begin recording a path
-    buttonA.whenPressed(() -> startMotionRecord());
-    // Y/Yellow: End recording a path
-    buttonB.whenPressed(() -> stopMotionRecord());
-    // A/Green: Play back the recorded path
-    buttonY.whenPressed(() -> {
-      if(!m_recordPath.isEmpty()) {
-        playMotionRecord();
-      }
-    });
-    // X/Blue: Recording the current pose as a waypoint:
-    buttonX.whenPressed(() -> recordPose());
-
-    // POV button to issue drive-by-Ramsete commands:
-    topPOVButton.whenPressed(() -> translateDrive(0.2, 0.0));
-    rightPOVButton.whenPressed(() -> translateDrive(0.20, -Math.PI/4));
-    bottomPOVButton.whenPressed(() -> translateDrive(-0.2, 0.0));
-    leftPOVButton.whenPressed(() -> translateDrive(0.20, Math.PI/4));
-
-    // Example of how to use the onboard IO
-    Button onboardButtonA = new Button(m_onboardIO::getButtonAPressed);
-    onboardButtonA
-        .whenActive(new PrintCommand("Button A Pressed"))
-        .whenInactive(new PrintCommand("Button A Released"));
-  }
+  private void configureButtonBindings() {}
 
   public void flipTeleOpDriveSide() {
     teleopDriveSide = teleopDriveSide == 1 ? -1 : 1;
@@ -463,6 +358,10 @@ public class RobotContainer {
 
   public int getTeleOpDriveSide() {
     return teleopDriveSide;
+  }
+
+  public Drivetrain getDrive() {
+    return m_drivetrain;
   }
 
   /**
