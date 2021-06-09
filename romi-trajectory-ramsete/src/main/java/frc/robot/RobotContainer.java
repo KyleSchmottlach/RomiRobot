@@ -109,8 +109,13 @@ public class RobotContainer {
     allianceAnticsCommandGroup = new ParallelCommandGroup(
       new IntakeCommand(collector, 1),
       new SequentialCommandGroup(
-        new DriveDistance(0.8, Units.inchesToMeters(10), m_drivetrain),
-        new TurnDegrees(0.8, -90, m_drivetrain)
+        new DriveDistance(0.8, Units.inchesToMeters(12), m_drivetrain),
+        new TurnDegrees(0.8, -90, m_drivetrain),
+        new DriveDistance(0.8, Units.inchesToMeters(25), m_drivetrain),
+        new TurnDegrees(0.8, 90, m_drivetrain),
+        new DriveDistance(0.8, Units.inchesToMeters(40), m_drivetrain),
+        new TurnDegrees(0.8, 90, m_drivetrain),
+        new DriveDistance(0.8, Units.inchesToMeters(25), m_drivetrain)
       )
     );
 

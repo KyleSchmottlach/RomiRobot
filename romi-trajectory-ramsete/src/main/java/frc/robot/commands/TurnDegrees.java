@@ -5,13 +5,18 @@
 package frc.robot.commands;
 
 import frc.robot.subsystems.Drivetrain;
+import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.PIDCommand;
+import edu.wpi.first.wpiutil.math.MathUtil;
 
-public class TurnDegrees extends CommandBase {
+public class TurnDegrees extends PIDCommand {
   private final Drivetrain m_drive;
   private final double m_degrees;
   private final double m_speed;
+  private int counter = 0;
+  private boolean endingCheck;
 
   /**
    * Creates a new TurnDegrees. This command will turn your robot for a desired rotation (in
@@ -22,25 +27,43 @@ public class TurnDegrees extends CommandBase {
    * @param drive The drive subsystem on which this command will run
    */
   public TurnDegrees(double speed, double degrees, Drivetrain drive) {
+    super(new PIDController(0.0095, 0, 0), 
+    drive::getGyroAngleZ, 
+    degrees, 
+    output -> {
+      double clampedOutput = MathUtil.clamp(output, -1, 1);
+      if(Math.abs(clampedOutput) < 0.3 && Math.abs(clampedOutput) > 0) {
+        double tempClampedOutput = clampedOutput;
+        clampedOutput = Math.copySign(0.3, tempClampedOutput);
+      }
+      System.out.println(clampedOutput);
+      drive.arcadeDrive(0, clampedOutput);
+    }, 
+    drive);
+
     m_degrees = degrees;
     m_speed = speed;
     m_drive = drive;
-    addRequirements(drive);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    // Set motors to stop, read encoder values for starting point
+    super.initialize();
+    
     m_drive.arcadeDrive(0, 0);
-    m_drive.resetOdometry(new Pose2d());
+    m_drive.resetGyro();
+    m_drive.resetOdometry(new Pose2d()); 
   }
 
-  // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    System.out.println("Turning");
-    m_drive.arcadeDrive(0, m_speed);
+    super.execute();
+    if(counter <= 5) {
+      counter++;
+    } else {
+      counter = 0;
+    }
   }
 
   // Called once the command ends or is interrupted.
@@ -57,8 +80,17 @@ public class TurnDegrees extends CommandBase {
        has a wheel placement diameter (149 mm) - width of the wheel (8 mm) = 141 mm
        or 5.551 inches. We then take into consideration the width of the tires.
     */
-    double inchPerDegree = Math.PI * 5.551 / 360;
+    //double inchPerDegree = Math.PI * 5.551 / 360;
     // Compare distance travelled from start to distance based on degree turn
-    return m_drive.getPose().getRotation().getDegrees() >= m_degrees;
+
+    if(counter == 4) {
+      if(m_degrees != 0) {
+        return m_drive.getGyroAngleZ() >= m_degrees - 5 && m_drive.getGyroAngleZ() <= m_degrees + 5;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
   }
 }

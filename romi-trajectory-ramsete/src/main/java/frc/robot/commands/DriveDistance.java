@@ -25,11 +25,15 @@ public class DriveDistance extends PIDCommand {
    */
   public DriveDistance(double speed, double meters, Drivetrain drive) {
     super(
-      new PIDController(0.075, 0.06, 0), 
+      new PIDController(0.12, 0, 0), 
       drive::getGyroAngleZ, 
       0,
       output -> {
         double clampedOutput = MathUtil.clamp(output, -1, 1);
+        if(Math.abs(clampedOutput) < 0.125 && Math.abs(clampedOutput) > 0) {
+          double tempClampedOutput = clampedOutput;
+          clampedOutput = Math.copySign(0.125, tempClampedOutput);
+        }
         drive.arcadeDrive(speed, clampedOutput);
       },
       drive
@@ -46,6 +50,7 @@ public class DriveDistance extends PIDCommand {
     super.initialize();
     m_drive.arcadeDrive(0, 0);
     m_drive.resetEncoders();
+    m_drive.resetGyro();
     m_drive.resetOdometry(new Pose2d());
   }
 
@@ -53,6 +58,7 @@ public class DriveDistance extends PIDCommand {
   @Override
   public void end(boolean interrupted) {
     m_drive.arcadeDrive(0, 0);
+    System.out.println("Command Finished");
   }
 
   // Returns true when the command should end.
