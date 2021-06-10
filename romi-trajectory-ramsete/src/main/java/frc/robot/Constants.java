@@ -75,5 +75,9 @@ public final class Constants {
     // Reasonable baseline values for a RAMSETE follower in units of meters and seconds
     public static final double kRamseteB = 2;
     public static final double kRamseteZeta = 0.7;
+
+    //Command-based PID Controllers
+    public static final double kPDrive = 0.12;
+    public static final double kPTurn = 0.0095;
   }
 }

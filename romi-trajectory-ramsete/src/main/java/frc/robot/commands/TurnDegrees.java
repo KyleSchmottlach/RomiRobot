@@ -27,14 +27,14 @@ public class TurnDegrees extends PIDCommand {
    * @param drive The drive subsystem on which this command will run
    */
   public TurnDegrees(double speed, double degrees, Drivetrain drive) {
-    super(new PIDController(0.0095, 0, 0), 
+    super(new PIDController(0.0085, 0, 0), 
     drive::getGyroAngleZ, 
     degrees, 
     output -> {
       double clampedOutput = MathUtil.clamp(output, -1, 1);
-      if(Math.abs(clampedOutput) < 0.3 && Math.abs(clampedOutput) > 0) {
+      if(Math.abs(clampedOutput) < 0.325 && Math.abs(clampedOutput) > 0) {
         double tempClampedOutput = clampedOutput;
-        clampedOutput = Math.copySign(0.3, tempClampedOutput);
+        clampedOutput = Math.copySign(0.325, tempClampedOutput);
       }
       System.out.println(clampedOutput);
       drive.arcadeDrive(0, clampedOutput);
@@ -59,7 +59,7 @@ public class TurnDegrees extends PIDCommand {
   @Override
   public void execute() {
     super.execute();
-    if(counter <= 5) {
+    if(counter <= 10) {
       counter++;
     } else {
       counter = 0;

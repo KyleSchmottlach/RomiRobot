@@ -56,7 +56,7 @@ public class RobotContainer {
   private final XboxController m_controller;
 
   private SequentialCommandGroup franticFetchCommandGroup;
-  private ParallelCommandGroup allianceAnticsCommandGroup;
+  private SequentialCommandGroup allianceAnticsCommandGroup;
 
   // Create SmartDashboard chooser for autonomous routines
   private final SendableChooser<Supplier<Command>> m_chooser = new SendableChooser<>();
@@ -106,17 +106,18 @@ public class RobotContainer {
         ramseteCommandForTrajectory(bounceTrajectory4)
       );
 
-    allianceAnticsCommandGroup = new ParallelCommandGroup(
-      new IntakeCommand(collector, 1),
-      new SequentialCommandGroup(
-        new DriveDistance(0.8, Units.inchesToMeters(12), m_drivetrain),
-        new TurnDegrees(0.8, -90, m_drivetrain),
-        new DriveDistance(0.8, Units.inchesToMeters(25), m_drivetrain),
-        new TurnDegrees(0.8, 90, m_drivetrain),
-        new DriveDistance(0.8, Units.inchesToMeters(40), m_drivetrain),
-        new TurnDegrees(0.8, 90, m_drivetrain),
-        new DriveDistance(0.8, Units.inchesToMeters(25), m_drivetrain)
-      )
+    allianceAnticsCommandGroup = new SequentialCommandGroup(
+      new IntakeCommand(1, true, collector),
+      new DriveDistance(0.8, Units.inchesToMeters(12), m_drivetrain),
+      new TurnDegrees(0.8, -90, m_drivetrain),
+      new DriveDistance(0.8, Units.inchesToMeters(27), m_drivetrain),
+      new TurnDegrees(0.8, 90, m_drivetrain),
+      new DriveDistance(0.8, Units.inchesToMeters(27.5), m_drivetrain),
+      new TurnDegrees(0.8, 55, m_drivetrain),
+      new DriveDistance(0.8, Units.inchesToMeters(31), m_drivetrain),
+      new TurnDegrees(0.8, -20, m_drivetrain),
+      new IntakeCommand(0, true, collector),
+      new IntakeCommand(-1, 1.5, collector)
     );
 
     m_chooser.setDefaultOption("Bounce 1", () -> ramseteCommandForTrajectory(bounceTrajectory1));
@@ -367,6 +368,14 @@ public class RobotContainer {
 
   public Drivetrain getDrive() {
     return m_drivetrain;
+  }
+
+  public void disabledInit() {
+    collector.setSpeed(0);
+  }
+
+  public void teleopInit() {
+    collector.setSpeed(0);
   }
 
   /**

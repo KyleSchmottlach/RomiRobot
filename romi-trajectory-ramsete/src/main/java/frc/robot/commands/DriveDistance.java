@@ -25,14 +25,14 @@ public class DriveDistance extends PIDCommand {
    */
   public DriveDistance(double speed, double meters, Drivetrain drive) {
     super(
-      new PIDController(0.12, 0, 0), 
+      new PIDController(0.0265, 0, 0), 
       drive::getGyroAngleZ, 
       0,
       output -> {
         double clampedOutput = MathUtil.clamp(output, -1, 1);
-        if(Math.abs(clampedOutput) < 0.125 && Math.abs(clampedOutput) > 0) {
+        if(Math.abs(clampedOutput) < 0.175 && Math.abs(clampedOutput) > 0) {
           double tempClampedOutput = clampedOutput;
-          clampedOutput = Math.copySign(0.125, tempClampedOutput);
+          clampedOutput = Math.copySign(0.175, tempClampedOutput);
         }
         drive.arcadeDrive(speed, clampedOutput);
       },
