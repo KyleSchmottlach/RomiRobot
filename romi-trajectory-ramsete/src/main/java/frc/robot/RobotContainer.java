@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -39,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -54,6 +57,10 @@ public class RobotContainer {
 
   // Assumes a gamepad plugged into channnel 0
   private final XboxController m_controller;
+
+  //Xbox Controller Buttons
+  private final JoystickButton drA;
+  private final JoystickButton drB;
 
   private SequentialCommandGroup franticFetchCommandGroup;
   private SequentialCommandGroup allianceAnticsCommandGroup;
@@ -91,6 +98,9 @@ public class RobotContainer {
     collector = new Collector();
 
     m_controller = new XboxController(0);
+
+    drA = new JoystickButton(m_controller, XboxController.Button.kA.value);
+    drB = new JoystickButton(m_controller, XboxController.Button.kB.value);
 
     configureButtonBindings();
     generateTrajectories();
@@ -356,7 +366,13 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {}
+  private void configureButtonBindings() {
+    drA.whenPressed(new InstantCommand(() -> collector.setSpeed(1), collector));
+    drA.whenReleased(new InstantCommand(() -> collector.setSpeed(0), collector));
+
+    drB.whenPressed(new InstantCommand(() -> collector.setSpeed(-1), collector));
+    drB.whenReleased(new InstantCommand(() -> collector.setSpeed(0), collector));
+  }
 
   public void flipTeleOpDriveSide() {
     teleopDriveSide = teleopDriveSide == 1 ? -1 : 1;
