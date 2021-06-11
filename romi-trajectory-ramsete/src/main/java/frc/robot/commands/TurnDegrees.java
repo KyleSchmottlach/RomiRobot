@@ -85,7 +85,7 @@ public class TurnDegrees extends PIDCommand {
 
     if(counter == 4) {
       if(m_degrees != 0) {
-        return m_drive.getGyroAngleZ() >= m_degrees - 5 && m_drive.getGyroAngleZ() <= m_degrees + 5;
+        return m_drive.getGyroAngleZ() >= m_degrees - 7 && m_drive.getGyroAngleZ() <= m_degrees + 7;
       } else {
         return true;
       }

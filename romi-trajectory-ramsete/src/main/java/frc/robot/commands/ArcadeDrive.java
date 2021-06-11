@@ -46,9 +46,9 @@ public class ArcadeDrive extends PIDCommand {
       output -> {
         double clampedOutput = MathUtil.clamp(output, -1, 1);
 
-        if(switchSides.get()) {
+        /*if(switchSides.get()) {
           Robot.getRobotContainer().flipTeleOpDriveSide();
-        } 
+        } */
 
         if(Math.abs(clampedOutput) < 0.2){
           double tempClampedOutput = clampedOutput;

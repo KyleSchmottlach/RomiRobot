@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -38,7 +36,6 @@ import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConst
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -61,9 +58,12 @@ public class RobotContainer {
   //Xbox Controller Buttons
   private final JoystickButton drA;
   private final JoystickButton drB;
+  private final JoystickButton drBumpLeft;
+  private final JoystickButton drBumpRight;
 
   private SequentialCommandGroup franticFetchCommandGroup;
   private SequentialCommandGroup allianceAnticsCommandGroup;
+  private SequentialCommandGroup straightCommandGroup;
 
   // Create SmartDashboard chooser for autonomous routines
   private final SendableChooser<Supplier<Command>> m_chooser = new SendableChooser<>();
@@ -101,6 +101,8 @@ public class RobotContainer {
 
     drA = new JoystickButton(m_controller, XboxController.Button.kA.value);
     drB = new JoystickButton(m_controller, XboxController.Button.kB.value);
+    drBumpLeft = new JoystickButton(m_controller, XboxController.Button.kBumperLeft.value);
+    drBumpRight = new JoystickButton(m_controller, XboxController.Button.kBumperRight.value);
 
     configureButtonBindings();
     generateTrajectories();
@@ -130,7 +132,22 @@ public class RobotContainer {
       new IntakeCommand(-1, 1.5, collector)
     );
 
-    m_chooser.setDefaultOption("Bounce 1", () -> ramseteCommandForTrajectory(bounceTrajectory1));
+    straightCommandGroup = new SequentialCommandGroup(
+      new IntakeCommand(1, true, collector),
+      new DriveDistance(0.7, Units.inchesToMeters(65), m_drivetrain),
+      new TurnDegrees(0.7, 15, m_drivetrain),
+      new IntakeCommand(-1, 1.5, collector),
+      new IntakeCommand(0, true, collector),
+      new TurnDegrees(0.7, -15, m_drivetrain),
+      new DriveDistance(-0.7, Units.inchesToMeters(3), m_drivetrain),
+      new TurnDegrees(0.7, -90, m_drivetrain),
+      new DriveDistance(0.7, Units.inchesToMeters(11), m_drivetrain),
+      new TurnDegrees(0.7, 90, m_drivetrain),
+      new DriveDistance(0.7, Units.inchesToMeters(12), m_drivetrain)
+    );
+
+    m_chooser.setDefaultOption("Straight Alliance Antics Auto", () -> straightCommandGroup);
+    m_chooser.addOption("Bounce 1", () -> ramseteCommandForTrajectory(bounceTrajectory1));
     m_chooser.addOption("Frantic Fetch", () -> franticFetchCommandGroup);
     m_chooser.addOption("Bounce 2", () -> ramseteCommandForTrajectory(bounceTrajectory2));
     m_chooser.addOption("Bounce 3", () -> ramseteCommandForTrajectory(bounceTrajectory3));
@@ -140,6 +157,7 @@ public class RobotContainer {
     m_chooser.addOption("Auto Routine Time", () -> new AutonomousTime(m_drivetrain));
     m_chooser.addOption("Drive For Distance (75 inches)", () -> new DriveDistance(0.8, Units.inchesToMeters(60), m_drivetrain));
     m_chooser.addOption("Alliance Antics Command Group", () -> allianceAnticsCommandGroup);
+    m_chooser.addOption("Collector", () -> new InstantCommand(() -> collector.setSpeed(1), collector));
 
     SmartDashboard.putData(m_chooser);
 
@@ -367,11 +385,11 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    drA.whenPressed(new InstantCommand(() -> collector.setSpeed(1), collector));
-    drA.whenReleased(new InstantCommand(() -> collector.setSpeed(0), collector));
+    drBumpRight.whenPressed(new InstantCommand(() -> collector.setSpeed(1), collector));
+    drBumpRight.whenReleased(new InstantCommand(() -> collector.setSpeed(0), collector));
 
-    drB.whenPressed(new InstantCommand(() -> collector.setSpeed(-1), collector));
-    drB.whenReleased(new InstantCommand(() -> collector.setSpeed(0), collector));
+    drBumpLeft.whenPressed(new InstantCommand(() -> collector.setSpeed(-1), collector));
+    drBumpLeft.whenReleased(new InstantCommand(() -> collector.setSpeed(0), collector));
   }
 
   public void flipTeleOpDriveSide() {
@@ -414,6 +432,6 @@ public class RobotContainer {
     return new ArcadeDrive(
         m_drivetrain, () -> -m_controller.getRawAxis(1), () -> m_controller.getRawAxis(4),
         () -> m_controller.getRawAxis(3), () -> m_controller.getRawAxis(2),
-        () -> m_controller.getRawButtonPressed(6));
+        () -> false);
   }
 }
