@@ -134,16 +134,15 @@ public class RobotContainer {
 
     straightCommandGroup = new SequentialCommandGroup(
       new IntakeCommand(1, true, collector),
-      new DriveDistance(0.7, Units.inchesToMeters(65), m_drivetrain),
-      new TurnDegrees(0.7, 15, m_drivetrain),
+      new DriveDistance(0.7, Units.inchesToMeters(59), m_drivetrain),
+      new TurnDegrees(0.7, 20, m_drivetrain),
       new IntakeCommand(-1, 1.5, collector),
       new IntakeCommand(0, true, collector),
-      new TurnDegrees(0.7, -15, m_drivetrain),
-      new DriveDistance(-0.7, Units.inchesToMeters(3), m_drivetrain),
-      new TurnDegrees(0.7, -90, m_drivetrain),
-      new DriveDistance(0.7, Units.inchesToMeters(11), m_drivetrain),
-      new TurnDegrees(0.7, 90, m_drivetrain),
-      new DriveDistance(0.7, Units.inchesToMeters(12), m_drivetrain)
+      new TurnDegrees(0.7, -20, m_drivetrain),
+      new TurnDegrees(0.6, -90, m_drivetrain),
+      new DriveDistance(0.7, Units.inchesToMeters(12), m_drivetrain),
+      new TurnDegrees(0.6, 90, m_drivetrain),
+      new DriveDistance(0.7, Units.inchesToMeters(11), m_drivetrain)
     );
 
     m_chooser.setDefaultOption("Straight Alliance Antics Auto", () -> straightCommandGroup);
@@ -432,6 +431,6 @@ public class RobotContainer {
     return new ArcadeDrive(
         m_drivetrain, () -> -m_controller.getRawAxis(1), () -> m_controller.getRawAxis(4),
         () -> m_controller.getRawAxis(3), () -> m_controller.getRawAxis(2),
-        () -> false);
+        () -> m_controller.getBButtonPressed());
   }
 }

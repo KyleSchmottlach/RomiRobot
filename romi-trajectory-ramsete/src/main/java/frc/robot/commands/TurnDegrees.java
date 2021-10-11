@@ -59,7 +59,7 @@ public class TurnDegrees extends PIDCommand {
   @Override
   public void execute() {
     super.execute();
-    if(counter <= 10) {
+    if(counter <= 15) {
       counter++;
     } else {
       counter = 0;

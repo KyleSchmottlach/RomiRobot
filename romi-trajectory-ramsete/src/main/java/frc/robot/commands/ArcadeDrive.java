@@ -44,16 +44,17 @@ public class ArcadeDrive extends PIDCommand {
       drivetrain::getGyroAngleZ, 
       0, 
       output -> {
+        double enhancedOutput = output*2;
         double clampedOutput = MathUtil.clamp(output, -1, 1);
 
-        /*if(switchSides.get()) {
+        if(switchSides.get()) {
           Robot.getRobotContainer().flipTeleOpDriveSide();
-        } */
-
-        if(Math.abs(clampedOutput) < 0.2){
-          double tempClampedOutput = clampedOutput;
-          clampedOutput = Math.copySign(0.2, tempClampedOutput);
         }
+
+        /*if(Math.abs(clampedOutput) < 0.25){
+          double tempClampedOutput = clampedOutput;
+          clampedOutput = Math.copySign(0.25, tempClampedOutput);
+        }*/
 
         //System.out.println("Clamped Output: " + clampedOutput);
         //drivetrain.arcadeDrive(Robot.getRobotContainer().getTeleOpDriveSide() * xaxisSpeedSupplier.get(), clampedOutput);
@@ -66,6 +67,8 @@ public class ArcadeDrive extends PIDCommand {
           drivetrain.arcadeDrive(Robot.getRobotContainer().getTeleOpDriveSide() * xaxisSpeedSupplier.get(), clampedOutput);
         }*/
         drivetrain.arcadeDrive(Robot.getRobotContainer().getTeleOpDriveSide() * xaxisSpeedSupplier.get(), 0.9 * zaxisRotateSupplier.get());
+        /*System.out.println("Output: " + clampedOutput);
+        drivetrain.arcadeDrive(Robot.getRobotContainer().getTeleOpDriveSide() * xaxisSpeedSupplier.get(), clampedOutput);*/
       }, 
       drivetrain);
     m_drivetrain = drivetrain;
